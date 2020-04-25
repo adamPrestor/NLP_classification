@@ -1,0 +1,6 @@
+tqdm
+Lemmagen
+nltk
+pandas
+numpy
+matplotlib
