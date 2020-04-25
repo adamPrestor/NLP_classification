@@ -3,11 +3,36 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from hmmlearn import hmm
+from sklearn.metrics import confusion_matrix
+
+# delete later, it's here for the debug
+from baseline import *
+
 
 def csv_parse(csv_path) -> pd.DataFrame:
-    df = pd.read_csv(csv_path, delimiter=';')
+    return pd.read_csv(csv_path, delimiter=';')
 
-    return df
+
+def split_train_test(df: pd.DataFrame):
+    """
+    Splits the dataframe by School, Bookclub and Topic, then divides 80% of conversations into train set and 20%
+    into test set.
+    :param df:
+    :return: (train, test) - both are lists of dataframes
+    """
+    conversations = df.groupby(by=['School', 'Bookclub', 'Topic'])
+    excluded_school = df['School'].unique()[-1]
+    # print(excluded_school)
+    train = []
+    test = []
+    for x in conversations:
+        if not x[0][0] is excluded_school:
+            train.append(x[1])
+        else:
+            test.append(x[1])
+    # print(len(train) / len(conversations), len(test) / len(conversations))
+    return train, test
 
 
 def autolabel(rects, ax):
@@ -32,8 +57,8 @@ def get_statistical_feeds(df):
     df5 = df['CategoryBroad'].value_counts()
     print(df5)
 
-    set = data['Message'].str.len()
-    set.reindex(data['CategoryBroad'].values)
+    set = df['Message'].str.len()
+    set.reindex(df['CategoryBroad'].values)
 
     df['MessageLength'] = df['Message'].apply(str).apply(len)
 
@@ -59,7 +84,7 @@ def output_plots(data: pd.DataFrame, title, y_label, filename):
     width = 0.15
 
     for i, row in enumerate(data.index):
-        reacts.append(ax.bar(x - (n//2-i)*width, data.loc[row, :], width, label=row))
+        reacts.append(ax.bar(x - (n // 2 - i) * width, data.loc[row, :], width, label=row))
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel(y_label)
@@ -100,11 +125,33 @@ def output_single(data: pd.Series, title, y_label, filename):
     plt.show()
 
 
-if __name__=='__main__':
-    data = csv_parse('input.csv')
+if __name__ == '__main__':
+    df = csv_parse('input.csv')
 
-    df1, df2, df3 = get_statistical_feeds(data)
+    # df1, df2, df3 = get_statistical_feeds(df)
 
     # output_plots(df1, 'CategoryBroad by school', 'Counts', 'broad-school')
     # output_single(df2, 'CategoryBroad in dataset distribution', 'Counts', 'broad')
-    output_single(df3, 'Message length by CategoryBroad', 'Length', 'length')
+    # output_single(df3, 'Message length by CategoryBroad', 'Length', 'length')
+
+    unique_tags = list(df['CategoryBroad'].unique())
+
+    train, test = split_train_test(df)
+
+    train_t = prepare_transitions(train)
+    test_t = prepare_transitions(test)
+
+    print(len(train_t))
+
+    model = predict_naive(train_t, ['START'] + unique_tags, unique_tags + ['END'])
+
+    prediction = test_naive(model, test_t)
+
+    print(model)
+    print(prediction)
+
+    evaluate_solution(prediction, [x[1] for x in test_t], unique_tags + ['END'])
+
+    # model = hmm.GaussianHMM(n_components=len(unique_tags) + 1, covariance_type='full')
+    # model.startprob_ = start_prob
+    # model.transmat_ = transmat
