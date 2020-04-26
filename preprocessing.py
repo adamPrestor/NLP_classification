@@ -277,20 +277,26 @@ class TokenDictionary():
 
         return token
 
-    def bag_of_words(self, tokens, tf_idf=False):
+    def bag_of_words(self, tokens, tf_idf=False, relative=False):
         """ Convert a list of tokens to a bag-of-words representation. """
 
         bow = np.zeros(self.dict_size)
         if len(tokens) == 0:
             return bow
 
+        # Absolute freqs
         for token in tokens:
             token = self.get_token(token)
             i = self.token_map[token]
             bow[i] += 1
 
+        # Relative freqs
+        if relative or tf_idf:
+            bow = bow / len(tokens)
+
+        # TF-IDF
         if tf_idf:
-            tf = np.log(1 + bow / len(tokens))
+            tf = np.log(1 + bow)
             idf = self.idf
 
             bow = tf * idf
