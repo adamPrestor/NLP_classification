@@ -19,20 +19,21 @@ def split_train_test(df: pd.DataFrame):
     Splits the dataframe by School, Bookclub and Topic, then divides 80% of conversations into train set and 20%
     into test set.
     :param df:
-    :return: (train, test) - both are lists of dataframes
+    :return: [(train, test)] - both are lists of dataframes
     """
     conversations = df.groupby(by=['School', 'Bookclub', 'Topic'])
-    excluded_school = df['School'].unique()[-1]
-    # print(excluded_school)
-    train = []
-    test = []
-    for x in conversations:
-        if not x[0][0] is excluded_school:
-            train.append(x[1])
-        else:
-            test.append(x[1])
-    # print(len(train) / len(conversations), len(test) / len(conversations))
-    return train, test
+    schools = df['School'].unique()
+    output = []
+    for excluded_school in schools:
+        train = []
+        test = []
+        for x in conversations:
+            if not x[0][0] is excluded_school:
+                train.append(x[1])
+            else:
+                test.append(x[1])
+        output.append((train, test))
+    return output
 
 
 def autolabel(rects, ax):
@@ -136,7 +137,9 @@ if __name__ == '__main__':
 
     unique_tags = list(df['CategoryBroad'].unique())
 
-    train, test = split_train_test(df)
+    split = split_train_test(df)
+
+    train, test = split[0]
 
     train_t = prepare_transitions(train)
     test_t = prepare_transitions(test)
