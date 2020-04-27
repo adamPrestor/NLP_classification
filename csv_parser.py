@@ -23,6 +23,7 @@ def split_train_test(df: pd.DataFrame):
     """
     conversations = df.groupby(by=['School', 'Bookclub', 'Topic'])
     schools = df['School'].unique()
+    print(schools)
     output = []
     for excluded_school in schools:
         train = []

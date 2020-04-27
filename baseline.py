@@ -33,19 +33,22 @@ def test_naive(model: dict, l: list):
     return [model[el[0]] for el in l]
 
 
-def evaluate_solution(pred: list, sol: list, tags: list, majority_class: str = 'C'):
+def evaluate_solution(pred: list, sol: list, tags: list, majority_class: str = 'C', verbose=True):
     confusion_mat = confusion_matrix(sol, pred, labels=tags)
     majority_i = tags.index(majority_class)
 
     n = len(pred)
     ca = sum([confusion_mat[i][i] for i in range(len(confusion_mat))]) / n
 
-    print(tags)
-    print(confusion_mat)
-    print(f'Our CA: {ca}')
+    if verbose:
+        print(tags)
+        print(confusion_mat)
+        print(f'Our CA: {ca}')
 
-    # print(np.sum(confusion_mat, axis=1))
-    print(f'Majority CA: {np.sum(confusion_mat, axis=1)[majority_i] / n}')
+        # print(np.sum(confusion_mat, axis=1))
+        print(f'Majority CA: {np.sum(confusion_mat, axis=1)[majority_i] / n}')
+
+    return confusion_mat
 
 
 def prepare_transitions(l: list):
