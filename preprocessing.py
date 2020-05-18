@@ -10,7 +10,6 @@ from lemmagen.lemmatizer import Lemmatizer
 import difflib
 
 def read_dataset(dataset_path):
-    dataset_path = 'data/discussion_data.csv'
     df = pd.read_csv(dataset_path, delimiter=';')
     df['CategoryBroad'] = pd.Categorical(df['CategoryBroad'])
     df.Message = df.Message.fillna('')
@@ -82,7 +81,7 @@ class RoofRemoval():
     """ Replaces slovenian special symbols. """
 
     def __init__(self):
-        self.replacements = dict([('ž', 'z'),('č', 'c'),('š', 's'),('ć', 'c'),('đ', 'dz')])
+        self.replacements = dict([('\\ž', 'z'),('\\č', 'c'),('\\š', 's'),('\\ć', 'c'),('\\đ', 'dz')])
         self.pattern = re.compile("|".join(self.replacements.keys()))
 
     def remove(self, token):

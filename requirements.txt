@@ -6,3 +6,4 @@ numpy
 matplotlib
 hmmlearn
 scikit-learn
+seaborn
