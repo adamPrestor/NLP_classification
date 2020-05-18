@@ -150,8 +150,5 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-# ignore csv
-*.csv
-
 # ignore png
 *.png
