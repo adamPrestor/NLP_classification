@@ -116,6 +116,39 @@ def get_features_previous_msg(message_i, bow_values):
 
     return [np.dot(tokens, tokens_p)]
 
+# Sentiment
+def get_features_sent(message_id):
+    message = messages_sent[message_id]
+    sent = sa.sentiment(message)
+
+    features = {'sentiment': sent}
+
+    return features
+
+def get_features_history(message_id):
+    entry = df.loc[message_id]
+    time = entry['Message Time']
+    username = entry['Name']
+
+    conversation = df[df['School'] == entry['School']]
+    conversation = conversation[conversation['Bookclub'] == entry['Bookclub']]
+    conversation = conversation[conversation['Topic'] == entry['Topic']]
+
+    time_mask = (conversation['Message Time'] < time) & (conversation['Message Time'] > time - timedelta(minutes=5))
+    username_mask = conversation['Name'] == username
+
+    n_last_5min = len(conversation[time_mask & username_mask])
+    n_posts_5min = len(conversation[time_mask])
+    n_users_5min = len(conversation[time_mask]['Name'].unique())
+
+    features = {
+        'recent_user_posts': n_last_5min,
+        'recent_posts': n_posts_5min,
+        'recent_users': n_users_5min
+    }
+
+    return features
+
 
 def get_label(message_i):
     message = df.loc[message_i]
