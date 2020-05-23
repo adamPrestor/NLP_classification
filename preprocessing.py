@@ -306,7 +306,7 @@ class TokenDictionary():
 class SentimentAnalysis:
     """ Sentiment analysis from a dictionary of positive and negative words. """
 
-    def __init__(self, negative_words_file, positive_words_file):
+    def __init__(self, negative_words_file, positive_words_file, roof_removal):
         with open(negative_words_file) as file:
             self.negative_words = {roof_removal.remove(word.strip()) for word in file}
 
