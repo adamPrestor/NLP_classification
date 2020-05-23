@@ -152,3 +152,6 @@ fabric.properties
 
 # ignore png
 *.png
+
+# ignore figures
+/figures
