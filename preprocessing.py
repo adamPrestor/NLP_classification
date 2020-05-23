@@ -81,11 +81,11 @@ class RoofRemoval():
     """ Replaces slovenian special symbols. """
 
     def __init__(self):
-        self.replacements = dict([('\\ž', 'z'),('\\č', 'c'),('\\š', 's'),('\\ć', 'c'),('\\đ', 'dz')])
+        self.replacements = dict([('ž', 'z'),('č', 'c'),('š', 's'),('ć', 'c'),('đ', 'dz')])
         self.pattern = re.compile("|".join(self.replacements.keys()))
 
     def remove(self, token):
-        token = self.pattern.sub(lambda x: self.replacements[re.escape(x.group(0))], token)
+        token = self.pattern.sub(lambda x: self.replacements[x.group(0)], token)
         return token
 
 
