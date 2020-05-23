@@ -7,3 +7,4 @@ matplotlib
 hmmlearn
 scikit-learn
 seaborn
+python-crfsuite
