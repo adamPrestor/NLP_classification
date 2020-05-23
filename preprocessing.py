@@ -301,3 +301,28 @@ class TokenDictionary():
             bow = tf * idf
 
         return bow
+
+
+class SentimentAnalysis:
+    """ Sentiment analysis from a dictionary of positive and negative words. """
+
+    def __init__(self, negative_words_file, positive_words_file):
+        with open(negative_words_file) as file:
+            self.negative_words = {roof_removal.remove(word.strip()) for word in file}
+
+        with open(positive_words_file) as file:
+            self.positive_words = {roof_removal.remove(word.strip()) for word in file}
+
+    def sentiment(self, message, normalize=True):
+        sent = 0
+        for token in message:
+            if token in self.negative_words:
+                sent -= 1
+            elif token in self.positive_words:
+                sent += 1
+
+        # Normalize (-1, 1)
+        if sent != 0 and normalize:
+            sent = sent / len(message)
+
+        return sent
