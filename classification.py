@@ -1,41 +1,23 @@
 import io
 import os
-import random
 import functools
-from itertools import chain
-from datetime import timedelta
 
 import pandas as pd
 import numpy as np
-from scipy import spatial
-import matplotlib.pyplot as plt
-import seaborn as sn
-
-from nltk import ngrams
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import LinearSVC, SVC
-from sklearn.metrics import plot_confusion_matrix, ConfusionMatrixDisplay
-from sklearn.neural_network import MLPClassifier
-from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, Normalizer
+from sklearn.svm import LinearSVC
 
 from preprocessing import read_dataset
 from preprocessing import Tokenization, StopWordsRemover, Lemmatization, RoofRemoval, SpellingCorrection
 from preprocessing import GibberishDetector, TokenGrouping, TokenDictionary, SentimentAnalysis
-import pycrfsuite
 
-from baseline import evaluate_solution
 from csv_parser import split_train_test
-from confusion_matrix_pretty_print import pretty_plot_confusion_matrix
-from evaluation import Evaluator
 
 import features as F
-from classification import build_ngram_model
 from models import MajorityModel, SklearnModel, CRFModel
 from cross_validation import cross_validate
+from evaluation import Evaluator
 
 if __name__=='__main__':
     # Read data
@@ -108,7 +90,7 @@ if __name__=='__main__':
     token_dict_context = TokenDictionary(list(book_tokens.values()) + list(topics_tokens.values()), dict_size=512)
 
     # Create BoW of ngrams
-    ngram_arr = build_ngram_model([msg.split() for msg in df.Message], 2)
+    ngram_arr = F.build_ngram_model([msg.split() for msg in df.Message], 2)
     ngram_dict = TokenDictionary(ngram_arr, dict_size=1024)
 
     # Get tf-idf weighted BoW representations

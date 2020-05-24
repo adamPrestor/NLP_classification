@@ -1,6 +1,15 @@
 from datetime import timedelta
 import numpy as np
 from scipy import spatial
+from nltk import ngrams
+
+
+def build_ngram_model(messages, n=2):
+    ngram_model = []
+    for msg in messages:
+        ngram_model.append(list(ngrams('_'.join(msg), n)))
+
+    return ngram_model
 
 def merge_feature_functions(fns):
     def _merged(message_id):
