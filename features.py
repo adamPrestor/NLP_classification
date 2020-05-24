@@ -2,6 +2,18 @@ from datetime import timedelta
 import numpy as np
 from scipy import spatial
 
+def merge_feature_functions(fns):
+    def _merged(message_id):
+        all_features, all_names = [], []
+        for fn in fns:
+            feats, names = fn(message_id)
+            all_features.extend(feats)
+            all_names.extend(names)
+
+        return all_features, all_names
+
+    return _merged
+
 # Only length as a feature
 def wordcount(message_i, df):
     message = df.loc[message_i]['Message']
