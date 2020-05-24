@@ -106,9 +106,9 @@ def previous_msg(message_i, bow_values):
     return features, names
 
 # Sentiment
-def sentiment(message_id, messages, sentiment_analysis):
+def sentiment(message_id, messages, sentiment_analysis, normalize=True):
     message = messages[message_id]
-    sent = sentiment_analysis.sentiment(message)
+    sent = sentiment_analysis.sentiment(message, normalize=normalize)
 
     names = ['sentiment']
 
@@ -135,3 +135,16 @@ def recent_activity(message_id, df):
     names = ['recent_user_posts', 'recent_posts', 'recent_users']
 
     return features, names
+
+def get_label(message_i, df):
+    message = df.loc[message_i]
+    return message['CategoryBroad']
+
+
+def conversation2features(conversation, feature_fn):
+    features = [feature_fn(msg_i) for msg_i in conversation]
+    return features
+
+def conversation2labels(conversation, labels_fn):
+    labels = [labels_fn(msg_i) for msg_i in conversation]
+    return labels
