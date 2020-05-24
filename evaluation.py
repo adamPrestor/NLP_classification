@@ -23,9 +23,9 @@ class Evaluator:
     def calculate_confusion_matrix(self):
         return confusion_matrix(self.y_true, self.y_pred, labels=self.tags)
 
-    def get_f1_measure(self, averaged=True):
+    def get_f1_measure(self, averaged=True, average_method='weighted'):
         """ returns f1 measurement of the predictions """
-        return self.get_measurement(f1_score, averaged)
+        return self.get_measurement(f1_score, averaged, average_method=average_method)
 
     def get_precision(self, averaged=True):
         """ returns precision measurement of the predictions """
@@ -48,6 +48,7 @@ class Evaluator:
         precision = self.get_precision()
         recall = self.get_recall()
         f_measure = self.get_f1_measure()
+        f_avg = self.get_f1_measure(average_method='macro')
 
         lines = [
             "Confusion matrix:",
@@ -57,6 +58,7 @@ class Evaluator:
             f"Precision: {precision:.4f}",
             f"Recall   : {recall:.4f}",
             f"F1 score : {f_measure:.4f}",
+            f"F! ave   : {f_avg:.4f}",
             "", "",
             class_specific_string(['class', 'precision', 'recall', 'f1 score']),
             "",
@@ -91,9 +93,9 @@ class Evaluator:
                 # save to file
                 plt.savefig(output + "_matrix.eps", format='eps')
 
-    def get_measurement(self, fn_measure, averaged=True):
+    def get_measurement(self, fn_measure, averaged=True, average_method='weighted'):
         if averaged:
-            return fn_measure(self.y_true, self.y_pred, labels=self.tags, average='weighted', zero_division=0)
+            return fn_measure(self.y_true, self.y_pred, labels=self.tags, average=average_method, zero_division=0)
 
         return dict(zip(self.tags, fn_measure(self.y_true, self.y_pred, labels=self.tags, average=None, zero_division=0)))
 
