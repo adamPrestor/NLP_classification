@@ -262,7 +262,7 @@ class TokenDictionary():
         self.token_map = {token: i for i, token in enumerate(token_dictionary)}
 
         # Compute idf for each word
-        bow = np.stack([self.bag_of_words(document) for document in documents])
+        bow = np.stack([self.bag_of_words(document, include_ood=True) for document in documents])
         num_documents = len(documents)
         word_occurences = np.sum(bow>0, axis=0)
 
