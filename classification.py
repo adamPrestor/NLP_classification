@@ -1,9 +1,11 @@
 import io
 import os
 import functools
+import argparse
 
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import LinearSVC
@@ -20,6 +22,10 @@ from cross_validation import cross_validate
 from evaluation import Evaluator
 
 if __name__=='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--full', action='store_true')
+    args = parser.parse_args()
+
     # Read data
     dataset_path = 'data/discussion_data.csv'
     df = read_dataset(dataset_path)
@@ -105,6 +111,10 @@ if __name__=='__main__':
 
     kFolds = split_train_test(df)
 
+    # If flag full is not present only train a single fold
+    if not args.full:
+        kFolds = kFolds[:1]
+
     # Create models
     model1 = SklearnModel(LinearSVC(max_iter=4000))
     model2 = SklearnModel(RandomForestClassifier(n_estimators=500))
@@ -147,13 +157,20 @@ if __name__=='__main__':
     labels_fn = functools.partial(F.get_label, df=df)
 
 
-    models = [model1, model2]
+    models = [model1, model2, model3]
     features_fns = [feature_fn1, feature_fn2, feature_fn3]
 
+    evaluators_train = []
+    evaluators_test = []
+
     for i, features_fn in enumerate(features_fns):
+        evals_train = []
+        evals_test = []
+
         # Get datasets
         folds_data = []
-        for train_dfs, test_dfs in kFolds:
+        print(f'Preparing Feature Set {i+1}')
+        for train_dfs, test_dfs in tqdm(kFolds):
             X_train, y_train = F.dataframes_to_dataset(train_dfs, features_fn, labels_fn)
             X_test, y_test = F.dataframes_to_dataset(test_dfs, features_fn, labels_fn)
 
@@ -161,18 +178,36 @@ if __name__=='__main__':
             folds_data.append(data)
 
         for j, model in enumerate(models):
-            print(f"Model {j}, feature set {i}")
+            print(f"Evaluating Model {j+1}, Feature Set {i+1}")
             res = cross_validate(folds_data, model)
             train_preds, train_labels, test_preds, test_labels = res
 
             test_evaluator = Evaluator(test_preds, test_labels, tags)
-            test_evaluator.get_classification_report(plot=True)
+            evals_test.append(test_evaluator)
+
             train_evaluator = Evaluator(train_preds, train_labels, tags)
-            train_evaluator.get_classification_report(plot=True)
+            evals_train.append(train_evaluator)
 
-            # For example: accuracy
-            train_acc = np.mean(np.array(train_preds) == np.array(train_labels))
-            test_acc = np.mean(np.array(test_preds) == np.array(test_labels))
+        evaluators_train.append(evals_train)
+        evaluators_test.append(evals_test)
 
-            print(f'Train accuracy: {train_acc}')
-            print(f'Test accuracy: {test_acc}')
+    # Show F scores for all experiments
+    f_scores = []
+    for feature_evals in evaluators_test:
+        scores = np.array([evaluator.get_f1_measure() for evaluator in feature_evals])
+        f_scores.append(scores)
+
+    f_scores = np.stack(f_scores)
+    rows = [f'FeatureSet {i+1}' for i in range(len(features_fns))]
+    cols = [f'Model {i+1}' for i in range(len(models))]
+
+    res_df = pd.DataFrame(data=f_scores, index=rows, columns=cols)
+
+    print()
+    print('Test F1 scores')
+    print(res_df)
+    print()
+
+    # Best model analysis
+    i,j = np.unravel_index(f_scores.argmax(), f_scores.shape)
+    evaluators_test[i][j].get_classification_report(plot=True)
