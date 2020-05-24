@@ -86,7 +86,7 @@ class Evaluator:
             # plot the confusion matrix with the use of prettyplot library
             # pretty_plot_confusion_matrix(confusion_mat, cmap='Blues')
             # plot_confusion_matrix_from_data(self.y_true, self.y_pred, columns=self.tags, cmap='Blues')
-            cm_display = ConfusionMatrixDisplay(confusion_mat, self.tags).plot(cmap='Blues', values_format='d')
+            cm_display = ConfusionMatrixDisplay(confusion_mat, display_labels=self.tags).plot(cmap='Blues', values_format='d')
             if output is None:
                 plt.show()
             else:
