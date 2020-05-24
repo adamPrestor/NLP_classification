@@ -281,6 +281,8 @@ class TokenDictionary():
 
         bow = np.zeros(self.dict_size + 1)
         if len(tokens) == 0:
+            if not include_ood:
+                bow = bow[:-1]
             return bow
 
         # Absolute freqs
