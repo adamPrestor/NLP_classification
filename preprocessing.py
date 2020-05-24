@@ -252,7 +252,7 @@ class TokenDictionary():
 
         # Find most common tokens and construct a dict from them
         cnt = Counter(all_tokens)
-        most_common = cnt.most_common(dict_size-1)
+        most_common = cnt.most_common(dict_size)
 
         # Out-of-dict token
         remaining = len(all_tokens) - sum(count for _, count in most_common)
@@ -276,10 +276,10 @@ class TokenDictionary():
 
         return token
 
-    def bag_of_words(self, tokens, tf_idf=False, relative=False):
+    def bag_of_words(self, tokens, tf_idf=False, relative=False, include_ood=False):
         """ Convert a list of tokens to a bag-of-words representation. """
 
-        bow = np.zeros(self.dict_size)
+        bow = np.zeros(self.dict_size + 1)
         if len(tokens) == 0:
             return bow
 
@@ -299,6 +299,9 @@ class TokenDictionary():
             idf = self.idf
 
             bow = tf * idf
+
+        if not include_ood:
+            bow = bow[:-1]
 
         return bow
 
