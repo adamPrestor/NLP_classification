@@ -30,6 +30,7 @@ import pycrfsuite
 from baseline import evaluate_solution
 from csv_parser import split_train_test
 from confusion_matrix_pretty_print import pretty_plot_confusion_matrix
+from evaluation import Evaluator
 
 import features as F
 from classification import build_ngram_model
@@ -41,6 +42,7 @@ if __name__=='__main__':
     dataset_path = 'data/discussion_data.csv'
     df = read_dataset(dataset_path)
     df['Message Time'] = pd.to_datetime(df['Message Time'])
+    tags = df.CategoryBroad.unique()
 
     # Tokenization, lemmatization, roof removal
     tokenizer = Tokenization()
@@ -172,7 +174,10 @@ if __name__=='__main__':
             res = cross_validate(kFolds, model, features_fn, labels_fn)
             train_preds, train_labels, test_preds, test_labels = res
 
-            # TODO: compute metrics for predictions and labels
+            test_evaluator = Evaluator(test_preds, test_labels, tags)
+            test_evaluator.get_classification_report(plot=True)
+            train_evaluator = Evaluator(train_preds, train_labels, tags)
+            train_evaluator.get_classification_report(plot=True)
 
             # For example: accuracy
             train_acc = np.mean(np.array(train_preds) == np.array(train_labels))
