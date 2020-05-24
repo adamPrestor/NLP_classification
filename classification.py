@@ -3,6 +3,7 @@ import os
 import random
 import functools
 from itertools import chain
+from datetime import timedelta
 
 import pandas as pd
 import numpy as np
@@ -16,12 +17,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 from sklearn.metrics import plot_confusion_matrix, ConfusionMatrixDisplay
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import MinMaxScaler, MaxAbsScaler, Normalizer
 
 from preprocessing import read_dataset
 from preprocessing import Tokenization, StopWordsRemover, Lemmatization, RoofRemoval, SpellingCorrection
-from preprocessing import GibberishDetector, TokenGrouping, TokenDictionary
+from preprocessing import GibberishDetector, TokenGrouping, TokenDictionary, SentimentAnalysis
 import pycrfsuite
 
 from baseline import evaluate_solution
@@ -123,7 +126,7 @@ def get_features_sent(message_id):
 
     features = {'sentiment': sent}
 
-    return features
+    return features.values()
 
 def get_features_history(message_id):
     entry = df.loc[message_id]
@@ -147,7 +150,7 @@ def get_features_history(message_id):
         'recent_users': n_users_5min
     }
 
-    return features
+    return features.values()
 
 
 def get_label(message_i):
@@ -178,12 +181,22 @@ if __name__ == "__main__":
     dataset_path = 'data/discussion_data.csv'
     df = read_dataset(dataset_path)
 
+    df['Message Time'] = pd.to_datetime(df['Message Time'])
+
+    # data scaler
+    # scaler = MinMaxScaler()
+    # scaler = MaxAbsScaler()
+    scaler = Normalizer()
+
     tokenizer = Tokenization()
     stop_words_remover = StopWordsRemover('data/stopwords-sl-custom.txt')
     lemmatizer = Lemmatization()
 
     roof_removal = RoofRemoval()
     spelling_correction = SpellingCorrection('data/dict-sl.txt', roof_removal)
+
+    # sentiment analysis
+    sa = SentimentAnalysis('data/negative_words_Slolex.txt', 'data/positive_words_Slolex.txt', roof_removal)
 
     gibberish_detector = GibberishDetector(roof_removal)
     # Train gibberish_detector
@@ -224,6 +237,7 @@ if __name__ == "__main__":
 
     # Remove stop words
     messages = [stop_words_remover.remove_stopwords(tokens) for tokens in messages]
+    messages_sent = messages
 
     # Lemmatization
     messages = [[lemmatizer.lemmatize(token) for token in message] for message in messages]
@@ -274,18 +288,37 @@ if __name__ == "__main__":
         conversation_list_test = list(test_dfs_all.index)
 
         features_fns = []
+        # length features
         features_fns.append(get_features_length)
         features_fns.append(get_features_rawlength)
+
+        # previous msg similarity
         features_fns.append(functools.partial(get_features_previous_msg, bow_values=bow))
+
+        # history features
+        features_fns.append(get_features_history)
+
+        # features sentiment
+        features_fns.append(get_features_sent)
+
+        # BoW features
         # features_fns.append(functools.partial(get_features_bow, bow_values=bow))
         features_fns.append(functools.partial(get_features_bow, bow_values=bow_tfidf))
+
+        # nGram model
         features_fns.append(functools.partial(get_features_bow, bow_values=ngram_model))
-        features_fns.append(functools.partial(get_features_context, books_context=book_tokens, count=True))
+
+        # similarity to the book
+        # features_fns.append(functools.partial(get_features_context, books_context=book_tokens, count=True))
         # features_fns.append(functools.partial(get_cosine_distance, bow_values=bow_tfidf, bow_books=book_tfidf))
         # features_fns.append(functools.partial(get_tfidf_from_book, bow_values=bow, bow_books=book_tfidf))
-        features_fns.append(functools.partial(get_features_context, books_context=topics_tokens, count=True, data_type='Topic'))
-        # features_fns.append(functools.partial(get_cosine_distance, bow_values=bow, bow_books=topic_tfidf, data_type='Topic'))
+
+        # similarity to the topic
+        # features_fns.append(functools.partial(get_features_context, books_context=topics_tokens, count=True, data_type='Topic'))
+        # features_fns.append(functools.partial(get_cosine_distance, bow_values=bow, bow_books=topic_bow, data_type='Topic'))
         # features_fns.append(functools.partial(get_tfidf_from_book, bow_values=bow, bow_books=topic_tfidf, data_type='Topic'))
+
+        # get labels for results
         labels_fn = get_label
 
         X_train = [list(chain.from_iterable([features_fn(s) for features_fn in features_fns])) for s in conversation_list_train]
@@ -294,11 +327,18 @@ if __name__ == "__main__":
         X_test = [list(chain.from_iterable([features_fn(s) for features_fn in features_fns])) for s in conversation_list_test]
         y_test = [labels_fn(s) for s in conversation_list_test]
 
+        # normalize features
+        # scaler.fit_transform(X_train)
+        # X_train = scaler.transform(X_train)
+        # X_test = scaler.transform(X_test)
+
         # clf = RandomForestClassifier(n_estimators=500)
-        # clf = GaussianNB()
+        clf = GaussianNB()
         # clf = DecisionTreeClassifier()
         # clf = KNeighborsClassifier(metric='minkowski', n_neighbors=9)
-        clf = LinearSVC(max_iter=4000)
+        # clf = LinearSVC(max_iter=4000)
+        # clf = SVC(max_iter=1000)
+        # clf = MLPClassifier()
 
         clf.fit(X_train, y_train)
 
