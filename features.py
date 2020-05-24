@@ -42,7 +42,7 @@ def wordcount(message_i, df):
     return features, names
 
 # BoW as features
-def message_bow(message_i, bow_values):
+def message_bow(message_i, bow_values, name='bow'):
     #     message = df.loc[message_i]
     message_bow = bow_values[message_i]
 
@@ -50,7 +50,7 @@ def message_bow(message_i, bow_values):
     for i, w in enumerate(message_bow):
         features.append(w)
 
-    names = [f'bow_{i:03d}' for i in range(len(features))]
+    names = [f'{name}_{i:04d}' for i in range(len(features))]
 
     return features, names
 
