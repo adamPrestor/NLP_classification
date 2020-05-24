@@ -151,9 +151,18 @@ if __name__=='__main__':
     features_fns = [feature_fn1, feature_fn2, feature_fn3]
 
     for i, features_fn in enumerate(features_fns):
+        # Get datasets
+        folds_data = []
+        for train_dfs, test_dfs in kFolds:
+            X_train, y_train = F.dataframes_to_dataset(train_dfs, features_fn, labels_fn)
+            X_test, y_test = F.dataframes_to_dataset(test_dfs, features_fn, labels_fn)
+
+            data = ((X_train, y_train), (X_test,y_test))
+            folds_data.append(data)
+
         for j, model in enumerate(models):
             print(f"Model {j}, feature set {i}")
-            res = cross_validate(kFolds, model, features_fn, labels_fn)
+            res = cross_validate(folds_data, model)
             train_preds, train_labels, test_preds, test_labels = res
 
             test_evaluator = Evaluator(test_preds, test_labels, tags)

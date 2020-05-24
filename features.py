@@ -3,6 +3,14 @@ import numpy as np
 from scipy import spatial
 from nltk import ngrams
 
+def dataframes_to_dataset(dfs, features_fn, labels_fn):
+    """ Converts a list of conversation datafames to a dataset. """
+
+    conversation_list = [list(df.index) for df in dfs]
+    X = [conversation2features(s, features_fn) for s in conversation_list]
+    y = [conversation2labels(s, labels_fn) for s in conversation_list]
+
+    return X, y
 
 def build_ngram_model(messages, n=2):
     ngram_model = []
