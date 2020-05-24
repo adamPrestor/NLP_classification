@@ -122,8 +122,9 @@ if __name__=='__main__':
     kFolds = split_train_test(df)
 
     # Create models
-    model1 = SklearnModel(RandomForestClassifier(n_estimators=500))
-    model2 = CRFModel('test')
+    model1 = SklearnModel(LinearSVC(max_iter=4000))
+    model2 = SklearnModel(RandomForestClassifier(n_estimators=500))
+    model3 = CRFModel('test')
 
     # Create base feature functions
     fn_length = functools.partial(F.length, df=df)
@@ -139,12 +140,12 @@ if __name__=='__main__':
     # Create feature functions combinations
     feature_fn1 = F.merge_feature_functions([
         fn_length,
-        fn_wordcount
+        fn_wordcount,
+        fn_sentiment,
+        fn_recent_activity
     ])
 
     feature_fn2 = F.merge_feature_functions([
-        fn_length,
-        fn_wordcount,
         fn_msg_bow,
         fn_ngram_bow
     ])
